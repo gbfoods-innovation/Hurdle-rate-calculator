@@ -410,7 +410,7 @@ function nsHurdleFor(tier,c){
   }
 }
 function relevant(c){
-  const rows=['GOLD','SILVER','BRONZE'].filter(t=>!ljBlocked(t)).map(t=>rule(S.ptype,S.pdetail,t)).filter(r=>r&&r.avail);
+  const rows=['GOLD','SILVER','BRONZE'].map(t=>rule(S.ptype,S.pdetail,t)).filter(r=>r&&r.avail);
   const has=(f,vals)=>rows.some(r=>vals.includes(r[f]));
   return {
     nsTotal: has('nsRule',['FIXED_TIER1','MEDIAN_TOP5_SUBFAMILY','TOP5_GBF_CATEGORY']),
