@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Financial Dashboard — GBfoods Europe</title>
+<style>
+:root{
+  --navy:#0B1F3A;
+  --navy-2:#13315C;
+  --navy-int:#1E4E8C;
+  --orange:#EA7317;
+  --orange-deep:#C75E08;
+  --gold:#B8860B; --gold-bg:#FBF3DC;
+  --silver:#6B7689; --silver-bg:#EEF1F5;
+  --bronze:#9C6B3F; --bronze-bg:#F4ECE3;
+  --pass:#1E7A52; --pass-bg:#E3F2E9;
+  --fail:#C0392B; --fail-bg:#FBE9E7;
+  --muted:#8A93A3; --none-bg:#F0F2F5;
+  --bg:#F6F7F9; --card:#FFFFFF; --line:#E4E8EF; --line-2:#EEF1F5;
+  --ink:#16233A; --ink-soft:#55617A;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Code","Roboto Mono",Consolas,monospace;
+  --r:10px; --shadow:0 1px 2px rgba(11,31,58,.06),0 8px 24px rgba(11,31,58,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--sans);color:var(--ink);background:var(--bg);
+  -webkit-font-smoothing:antialiased;line-height:1.45;font-size:15px}
+.wrap{max-width:1320px;margin:0 auto;padding:0 20px 64px}
+
+header{padding:26px 0 18px;border-bottom:1px solid var(--line)}
+.brand{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+.brand b{color:var(--orange-deep)}
+h1{font-size:27px;margin:6px 0 2px;letter-spacing:-.01em;font-weight:800;color:var(--navy)}
+.sub{color:var(--ink-soft);font-size:14px}
+.headrow{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.navlink{font-size:12px;font-weight:700;color:var(--navy-int);text-decoration:none;border:1px solid var(--line);
+  background:var(--card);padding:7px 14px;border-radius:999px;white-space:nowrap}
+.navlink:hover{background:var(--line-2)}
+
+/* Top-level tabs */
+.toptabs{display:flex;gap:8px;margin:20px 0 18px;flex-wrap:wrap}
+.toptab{font-size:13.5px;font-weight:800;color:var(--ink-soft);background:var(--card);border:1px solid var(--line);
+  padding:10px 18px;border-radius:10px;cursor:pointer}
+.toptab.active{color:#fff;background:var(--navy);border-color:var(--navy)}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.sec{padding:18px 20px}
+.sec+.sec{border-top:1px solid var(--line-2)}
+.eyebrow{display:flex;align-items:center;gap:9px;font-size:11px;letter-spacing:.13em;text-transform:uppercase;
+  font-weight:800;color:var(--ink-soft);margin:0 0 14px}
+.eyebrow .n{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:5px;
+  background:var(--navy);color:#fff;font-size:11px;font-weight:800}
+.note{font-size:12px;color:var(--muted);margin:8px 2px 0}
+
+/* Pills (metric / view selectors) */
+.pillrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.pill{font-size:12.5px;font-weight:700;color:var(--ink-soft);background:var(--card);border:1px solid var(--line);
+  padding:7px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.pill.active{color:#fff;background:var(--navy-int);border-color:var(--navy-int)}
+.pill.active.delta{background:var(--orange-deep);border-color:var(--orange-deep)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.seg button{font-size:12px;font-weight:700;color:var(--ink-soft);background:var(--card);border:none;
+  padding:6px 13px;cursor:pointer}
+.seg button.active{background:var(--navy);color:#fff}
+.legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:11.5px;color:var(--ink-soft)}
+.legend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+
+/* KPI tiles */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:16px 0 6px}
+.kpi{border:1px solid var(--line);border-radius:9px;padding:13px 15px;background:var(--card)}
+.kpi .lbl{font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft)}
+.kpi .val{font-size:22px;font-weight:800;color:var(--navy);margin:4px 0 6px;font-variant-numeric:tabular-nums}
+.kpi .deltas{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:700}
+.d-up{color:var(--pass)} .d-down{color:var(--fail)} .d-flat{color:var(--muted)}
+
+/* Matrix table */
+.tblwrap{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:9px}
+table.matrix{border-collapse:collapse;width:100%;font-size:13px}
+table.matrix th,table.matrix td{padding:9px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line-2)}
+table.matrix th.rowhead,table.matrix td.rowhead{text-align:left;position:sticky;left:0;background:var(--card);
+  font-weight:700;color:var(--ink);border-right:1px solid var(--line)}
+table.matrix thead th{background:var(--navy);color:#fff;font-weight:700;font-size:11.5px;letter-spacing:.03em;
+  text-transform:uppercase;border-bottom:none;position:sticky;top:0;z-index:2}
+table.matrix thead th.rowhead{background:var(--navy);color:#fff;z-index:3}
+table.matrix tbody tr:last-child td{border-bottom:none}
+table.matrix tr.totalrow td{font-weight:800;background:var(--line-2);border-top:2px solid var(--line)}
+table.matrix td.totalcol{font-weight:800;background:var(--line-2)}
+table.matrix td .pct{display:block;font-size:10.5px;font-weight:600;color:var(--ink-soft);margin-top:1px}
+table.matrix td.nd{color:var(--muted);font-weight:500;font-style:italic}
+table.matrix td.up .pct{color:var(--pass)} table.matrix td.down .pct{color:var(--fail)}
+
+/* Filters (P&L explorer) */
+.filters{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:1100px){.filters{grid-template-columns:repeat(2,1fr)}}
+.filtercol label{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.filtercol label .clear{font-size:10.5px;font-weight:700;color:var(--navy-int);cursor:pointer;text-transform:none;
+  letter-spacing:0}
+.filtercol input[type=text]{width:100%;font-family:var(--sans);font-size:12.5px;padding:6px 9px;border:1px solid var(--line);
+  border-radius:6px;margin-bottom:6px}
+.optlist{max-height:170px;overflow-y:auto;border:1px solid var(--line);border-radius:7px;background:#fff}
+.optlist label.opt{display:flex;align-items:center;gap:7px;padding:5px 9px;font-size:12.5px;cursor:pointer;font-weight:500}
+.optlist label.opt:hover{background:var(--line-2)}
+.optlist input{margin:0}
+.matchcount{font-size:12px;color:var(--ink-soft);margin-top:10px}
+.matchcount b{color:var(--navy)}
+
+.breaktbl{border-collapse:collapse;width:100%;font-size:12.5px;margin-top:10px}
+.breaktbl th,.breaktbl td{padding:7px 10px;text-align:right;border-bottom:1px solid var(--line-2);white-space:nowrap}
+.breaktbl th{background:var(--line-2);color:var(--ink-soft);font-size:10.5px;text-transform:uppercase;letter-spacing:.04em}
+.breaktbl td.rowhead,.breaktbl th.rowhead{text-align:left;font-weight:700}
+.breaktbl tr:hover td{background:#FAFBFD}
+
+footer{margin-top:34px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="headrow">
+      <div>
+        <div class="brand">GBfoods · Europe — <b>Finance</b></div>
+        <h1>Financial Dashboard</h1>
+        <div class="sub">June YTD (periods 1–6) · Net Volume, Net Sales &amp; Gross Margin by BU and Platform</div>
+      </div>
+      <a class="navlink" href="index.html">← Innovation Hurdle Calculator</a>
+    </div>
+  </header>
+
+  <div class="toptabs">
+    <div class="toptab active" data-tab="matrices">Matrices BU × Platform</div>
+    <div class="toptab" data-tab="explorer">P&amp;L Explorer</div>
+  </div>
+
+  <!-- ============ MATRICES TAB ============ -->
+  <div id="tab-matrices">
+    <div class="panel">
+      <div class="sec">
+        <p class="eyebrow"><span class="n">1</span> Métrica</p>
+        <div class="pillrow" id="metricPills"></div>
+      </div>
+      <div class="sec">
+        <div class="headrow" style="align-items:center">
+          <p class="eyebrow" style="margin:0"><span class="n">2</span> Escenario / Comparativa</p>
+          <div class="seg" id="unitSeg" style="display:none">
+            <button data-unit="abs" class="active">€</button>
+            <button data-unit="pct">%</button>
+          </div>
+        </div>
+        <div class="pillrow" id="viewPills"></div>
+
+        <div class="kpis" id="kpiRow"></div>
+
+        <div class="tblwrap"><table class="matrix" id="matrixTable"></table></div>
+        <div class="legend" id="matrixLegend" style="margin-top:12px"></div>
+        <p class="note">Cifras YTD junio (periodos 1–6) tal como aparecen en la base de datos DB 06.2026, sin reescalar. 2026R = Real 2026, 2026B = Budget 2026, 2025R = Real 2025. En vista % de Gross Margin, las celdas con Net Sales prácticamente nulo muestran <b>n/d</b> (el % no es significativo con un denominador tan pequeño).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ EXPLORER TAB ============ -->
+  <div id="tab-explorer" style="display:none">
+    <div class="panel">
+      <div class="sec">
+        <p class="eyebrow"><span class="n">1</span> Filtros</p>
+        <div class="filters">
+          <div class="filtercol">
+            <label>BU <span class="clear" data-clear="bu">borrar</span></label>
+            <div class="optlist" id="opt-bu"></div>
+          </div>
+          <div class="filtercol">
+            <label>País <span class="clear" data-clear="country">borrar</span></label>
+            <input type="text" placeholder="Buscar país…" data-search="country">
+            <div class="optlist" id="opt-country"></div>
+          </div>
+          <div class="filtercol">
+            <label>Platform <span class="clear" data-clear="platform">borrar</span></label>
+            <div class="optlist" id="opt-platform"></div>
+          </div>
+          <div class="filtercol">
+            <label>Sub-Family <span class="clear" data-clear="subfam">borrar</span></label>
+            <input type="text" placeholder="Buscar sub-family…" data-search="subfam">
+            <div class="optlist" id="opt-subfam"></div>
+          </div>
+        </div>
+        <div class="matchcount" id="matchCount"></div>
+      </div>
+
+      <div class="sec">
+        <p class="eyebrow"><span class="n">2</span> Resultado — 2026R vs 2025R vs 2026B</p>
+        <div class="kpis" id="explKpis" style="grid-template-columns:repeat(4,1fr)"></div>
+      </div>
+
+      <div class="sec">
+        <p class="eyebrow"><span class="n">3</span> Desglose por Sub-Family (dentro del filtro actual)</p>
+        <div class="tblwrap"><table class="breaktbl" id="breakTable"></table></div>
+        <p class="note" id="breakNote"></p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Herramienta interna de Finance / Innovation — GBfoods Europe. Datos de origen: extracto DB 06.2026 (cierre de junio). No constituye asesoramiento financiero; las cifras son información presupuestaria sensible.
+  </footer>
+</div>
+
+<script src="financial-dashboard-data.js"></script>
+<script>
+const D = window.FIN_DATA;
+const SCEN = D.scenarios; // ['2025R','2026B','2026R']
+const BUS = D.busOrder.map(i=>D.bus[i]);
+const PLATS = D.platformsOrder.map(i=>D.platforms[i]);
+const COUNTRIES = D.countries.slice().sort();
+const SUBFAMS = D.subfams.slice().sort();
+
+const nfInt = new Intl.NumberFormat('es-ES',{maximumFractionDigits:0});
+const nf1 = new Intl.NumberFormat('es-ES',{maximumFractionDigits:1,minimumFractionDigits:1});
+const nfPct = new Intl.NumberFormat('es-ES',{maximumFractionDigits:1,minimumFractionDigits:1});
+
+function fmt(v){ return nf1.format(v); }
+function fmtSigned(v){ return (v>0?'+':'') + nf1.format(v); }
+function fmtPctSigned(v){ return (v>0?'+':'') + nfPct.format(v); }
+
+const METRICS = [
+  {key:'vol', label:'Volumen'},
+  {key:'ns', label:'Net Sales'},
+  {key:'gm', label:'Gross Margin'},
+];
+const VIEWS = [
+  {key:'2026R', label:'2026R', delta:false},
+  {key:'2026B', label:'2026B', delta:false},
+  {key:'2025R', label:'2025R', delta:false},
+  {key:'vsLY', label:'Δ vs 2025R', delta:true, base:'2026R', comp:'2025R'},
+  {key:'vsB', label:'Δ vs 2026B', delta:true, base:'2026R', comp:'2026B'},
+];
+
+let state = { metric:'ns', view:'2026R', unit:'abs' };
+
+// ---- Precompute BU x Platform matrices per scenario ----
+const MTX = {}; // MTX[scen][metric][bu][plat] = value
+SCEN.forEach(s=>{
+  MTX[s] = {vol:{}, ns:{}, gm:{}};
+  BUS.forEach(b=>{
+    ['vol','ns','gm'].forEach(m=>{ MTX[s][m][b] = {}; PLATS.forEach(p=>{ MTX[s][m][b][p]=0; }); });
+  });
+});
+D.rows.forEach(r=>{
+  const [si,bi,ci,pi,sfi,vol,ns,gm] = r;
+  const s = D.scenarios[si], b = D.bus[bi], p = D.platforms[pi];
+  if(!(b in MTX[s].vol)) return;
+  MTX[s].vol[b][p]+=vol; MTX[s].ns[b][p]+=ns; MTX[s].gm[b][p]+=gm;
+});
+
+const NS_EPS = 0.05; // below this |Net Sales|, GM% is noise (near-zero denominator) -> show n/d
+function cellValue(scen, metric, unit, bu, plat){
+  if(metric==='gm' && unit==='pct'){
+    const ns = MTX[scen].ns[bu][plat], gm = MTX[scen].gm[bu][plat];
+    return Math.abs(ns)>=NS_EPS ? (gm/ns*100) : null;
+  }
+  return MTX[scen][metric][bu][plat];
+}
+function rowTotal(scen, metric, unit, bu){
+  if(metric==='gm' && unit==='pct'){
+    let ns=0, gm=0; PLATS.forEach(p=>{ ns+=MTX[scen].ns[bu][p]; gm+=MTX[scen].gm[bu][p]; });
+    return Math.abs(ns)>=NS_EPS ? gm/ns*100 : null;
+  }
+  let t=0; PLATS.forEach(p=> t+=MTX[scen][metric][bu][p]); return t;
+}
+function colTotal(scen, metric, unit, plat){
+  if(metric==='gm' && unit==='pct'){
+    let ns=0, gm=0; BUS.forEach(b=>{ ns+=MTX[scen].ns[b][plat]; gm+=MTX[scen].gm[b][plat]; });
+    return Math.abs(ns)>=NS_EPS ? gm/ns*100 : null;
+  }
+  let t=0; BUS.forEach(b=> t+=MTX[scen][metric][b][plat]); return t;
+}
+function grandTotal(scen, metric, unit){
+  if(metric==='gm' && unit==='pct'){
+    let ns=0, gm=0; BUS.forEach(b=>PLATS.forEach(p=>{ ns+=MTX[scen].ns[b][p]; gm+=MTX[scen].gm[b][p]; }));
+    return Math.abs(ns)>=NS_EPS ? gm/ns*100 : null;
+  }
+  let t=0; BUS.forEach(b=>PLATS.forEach(p=> t+=MTX[scen][metric][b][p])); return t;
+}
+
+// ---- Render pills ----
+function renderMetricPills(){
+  const el = document.getElementById('metricPills');
+  el.innerHTML = '';
+  METRICS.forEach(m=>{
+    const p = document.createElement('div');
+    p.className = 'pill' + (state.metric===m.key?' active':'');
+    p.textContent = m.label;
+    p.onclick = ()=>{ state.metric = m.key; if(m.key!=='gm') state.unit='abs'; renderAll(); };
+    el.appendChild(p);
+  });
+}
+function renderViewPills(){
+  const el = document.getElementById('viewPills');
+  el.innerHTML = '';
+  VIEWS.forEach(v=>{
+    const p = document.createElement('div');
+    p.className = 'pill' + (v.delta?' delta':'') + (state.view===v.key?' active':'');
+    p.textContent = v.label;
+    p.onclick = ()=>{ state.view = v.key; renderAll(); };
+    el.appendChild(p);
+  });
+  document.getElementById('unitSeg').style.display = state.metric==='gm' ? 'inline-flex' : 'none';
+  document.querySelectorAll('#unitSeg button').forEach(b=>{
+    b.classList.toggle('active', b.dataset.unit===state.unit);
+    b.onclick = ()=>{ state.unit = b.dataset.unit; renderAll(); };
+  });
+}
+
+// ---- KPI row (always shows the 3 scenario totals + deltas, metric-scoped) ----
+function renderKpis(){
+  const el = document.getElementById('kpiRow');
+  el.innerHTML = '';
+  const unit = state.metric==='gm' ? state.unit : 'abs';
+  const suffix = unit==='pct' ? ' pp' : '';
+  const tR = grandTotal('2026R', state.metric, unit);
+  const tB = grandTotal('2026B', state.metric, unit);
+  const tLY = grandTotal('2025R', state.metric, unit);
+  const mk = (label, val, vsLY, vsB)=>{
+    const d = document.createElement('div');
+    d.className='kpi';
+    const dLine = (lbl, delta, base)=>{
+      const pct = (unit!=='pct' && base) ? (base!==0 ? delta/Math.abs(base)*100 : null) : null;
+      const cls = delta>0.0001?'d-up':(delta<-0.0001?'d-down':'d-flat');
+      const arrow = delta>0.0001?'▲':(delta<-0.0001?'▼':'—');
+      const pctTxt = pct!==null ? ' ('+fmtPctSigned(pct)+'%)' : '';
+      return '<span class="'+cls+'">'+arrow+' '+lbl+': '+fmtSigned(delta)+(unit==='pct'?' pp':'')+pctTxt+'</span>';
+    };
+    d.innerHTML = '<div class="lbl">'+label+'</div><div class="val">'+fmt(val)+suffix+'</div>'+
+      '<div class="deltas">'+dLine('vs 2025R', vsLY, tLY)+dLine('vs 2026B', vsB, tB)+'</div>';
+    el.appendChild(d);
+  };
+  mk('2025R (Real LY)', tLY, tLY-tLY, tLY-tB);
+  mk('2026B (Budget)', tB, tB-tLY, tB-tB);
+  mk('2026R (Real actual)', tR, tR-tLY, tR-tB);
+}
+
+// ---- Matrix table ----
+function renderMatrix(){
+  const table = document.getElementById('matrixTable');
+  const metric = state.metric;
+  const unit = metric==='gm' ? state.unit : 'abs';
+  const viewDef = VIEWS.find(v=>v.key===state.view);
+  const isDelta = viewDef.delta;
+  const scen = isDelta ? viewDef.base : viewDef.key;
+  const compScen = isDelta ? viewDef.comp : null;
+
+  const sub = (v,c)=> (v===null||c===null) ? null : v-c;
+  const getVal = (bu, plat)=>{
+    const v = cellValue(scen, metric, unit, bu, plat);
+    if(!isDelta) return v;
+    return sub(v, cellValue(compScen, metric, unit, bu, plat));
+  };
+  const getRowTotal = (bu)=>{
+    const v = rowTotal(scen, metric, unit, bu);
+    if(!isDelta) return v;
+    return sub(v, rowTotal(compScen, metric, unit, bu));
+  };
+  const getColTotal = (plat)=>{
+    const v = colTotal(scen, metric, unit, plat);
+    if(!isDelta) return v;
+    return sub(v, colTotal(compScen, metric, unit, plat));
+  };
+  const getGrand = ()=>{
+    const v = grandTotal(scen, metric, unit);
+    if(!isDelta) return v;
+    return sub(v, grandTotal(compScen, metric, unit));
+  };
+
+  // max magnitude for heatmap scaling (excluding totals, ignoring n/d cells)
+  let maxAbs = 0.0001;
+  BUS.forEach(b=>PLATS.forEach(p=>{ const v=getVal(b,p); if(v!==null) maxAbs = Math.max(maxAbs, Math.abs(v)); }));
+
+  const cellStyle = (val)=>{
+    if(val===null) return 'background:var(--none-bg)';
+    const ratio = Math.min(1, Math.abs(val)/maxAbs);
+    if(isDelta){
+      const color = val>=0 ? '30,122,82' : '192,57,43';
+      const alpha = 0.05 + 0.28*ratio;
+      return 'background:rgba('+color+','+alpha.toFixed(3)+')';
+    } else {
+      const alpha = 0.04 + 0.32*ratio;
+      return 'background:rgba(30,78,140,'+alpha.toFixed(3)+')';
+    }
+  };
+  const suffix = unit==='pct' ? (isDelta? ' pp':'%') : '';
+  const fmtTotal = (val)=> val===null ? 'n/d' : (isDelta?fmtSigned(val):fmt(val)) + (val===null?'':suffix);
+  const cellHtml = (val, compVal)=>{
+    if(val===null) return '<td style="'+cellStyle(val)+'" class="nd">n/d</td>';
+    let main = isDelta ? fmtSigned(val) : fmt(val);
+    let pctLine = '';
+    let cls = '';
+    if(isDelta){
+      cls = val>0.0001?'up':(val<-0.0001?'down':'');
+      if(unit!=='pct' && compVal!==undefined && compVal!==null && Math.abs(compVal)>0.0001){
+        pctLine = '<span class="pct">'+fmtPctSigned(val/Math.abs(compVal)*100)+'%</span>';
+      }
+    }
+    return '<td style="'+cellStyle(val)+'" class="'+cls+'">'+main+suffix+pctLine+'</td>';
+  };
+
+  let thead = '<thead><tr><th class="rowhead">BU \\ Platform</th>';
+  PLATS.forEach(p=> thead += '<th>'+p+'</th>');
+  thead += '<th>Total</th></tr></thead>';
+
+  let tbody = '<tbody>';
+  BUS.forEach(b=>{
+    tbody += '<tr><td class="rowhead">'+b+'</td>';
+    PLATS.forEach(p=>{
+      const val = getVal(b,p);
+      const comp = isDelta ? cellValue(compScen, metric, unit, b, p) : undefined;
+      tbody += cellHtml(val, comp);
+    });
+    const rt = getRowTotal(b);
+    tbody += '<td class="totalcol">'+fmtTotal(rt)+'</td>';
+    tbody += '</tr>';
+  });
+  tbody += '<tr class="totalrow"><td class="rowhead">Total</td>';
+  PLATS.forEach(p=>{
+    const ct = getColTotal(p);
+    tbody += '<td>'+fmtTotal(ct)+'</td>';
+  });
+  const gt = getGrand();
+  tbody += '<td class="totalcol">'+fmtTotal(gt)+'</td>';
+  tbody += '</tr></tbody>';
+
+  table.innerHTML = thead + tbody;
+
+  const legend = document.getElementById('matrixLegend');
+  if(isDelta){
+    legend.innerHTML = '<span><span class="sw" style="background:rgba(30,122,82,.28)"></span>Favorable (▲)</span>'+
+      '<span><span class="sw" style="background:rgba(192,57,43,.28)"></span>Desfavorable (▼)</span>'+
+      '<span>Intensidad del color = magnitud relativa de la variación</span>';
+  } else {
+    legend.innerHTML = '<span><span class="sw" style="background:rgba(30,78,140,.32)"></span>Mayor concentración de '+
+      METRICS.find(m=>m.key===metric).label.toLowerCase()+'</span>'+
+      '<span>Intensidad del color = magnitud relativa dentro de la matriz</span>';
+  }
+}
+
+function renderAll(){
+  renderMetricPills();
+  renderViewPills();
+  renderKpis();
+  renderMatrix();
+}
+
+// ---- Top tabs ----
+document.querySelectorAll('.toptab').forEach(t=>{
+  t.onclick = ()=>{
+    document.querySelectorAll('.toptab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('tab-matrices').style.display = t.dataset.tab==='matrices' ? '' : 'none';
+    document.getElementById('tab-explorer').style.display = t.dataset.tab==='explorer' ? '' : 'none';
+  };
+});
+
+// =====================================================================
+// P&L EXPLORER
+// =====================================================================
+const filterState = { bu:new Set(), country:new Set(), platform:new Set(), subfam:new Set() };
+
+function buildOptionList(containerId, values, dim){
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  values.forEach(v=>{
+    const lbl = document.createElement('label');
+    lbl.className = 'opt';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = v;
+    cb.onchange = ()=>{
+      if(cb.checked) filterState[dim].add(v); else filterState[dim].delete(v);
+      renderExplorer();
+    };
+    lbl.appendChild(cb);
+    lbl.appendChild(document.createTextNode(v));
+    el.appendChild(lbl);
+  });
+}
+buildOptionList('opt-bu', BUS, 'bu');
+buildOptionList('opt-country', COUNTRIES, 'country');
+buildOptionList('opt-platform', PLATS, 'platform');
+buildOptionList('opt-subfam', SUBFAMS, 'subfam');
+
+document.querySelectorAll('input[data-search]').forEach(inp=>{
+  inp.oninput = ()=>{
+    const dim = inp.dataset.search;
+    const containerId = dim==='country' ? 'opt-country' : 'opt-subfam';
+    const q = inp.value.toLowerCase();
+    document.querySelectorAll('#'+containerId+' .opt').forEach(o=>{
+      o.style.display = o.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+  };
+});
+document.querySelectorAll('.clear').forEach(c=>{
+  c.onclick = ()=>{
+    const dim = c.dataset.clear;
+    filterState[dim].clear();
+    const containerId = 'opt-'+dim;
+    document.querySelectorAll('#'+containerId+' input').forEach(i=> i.checked=false);
+    renderExplorer();
+  };
+});
+
+function rowMatches(r){
+  const [si,bi,ci,pi,sfi] = r;
+  if(filterState.bu.size && !filterState.bu.has(D.bus[bi])) return false;
+  if(filterState.country.size && !filterState.country.has(D.countries[ci])) return false;
+  if(filterState.platform.size && !filterState.platform.has(D.platforms[pi])) return false;
+  if(filterState.subfam.size && !filterState.subfam.has(D.subfams[sfi])) return false;
+  return true;
+}
+
+function renderExplorer(){
+  const totals = {}; SCEN.forEach(s=> totals[s] = {vol:0,ns:0,gm:0});
+  const bySubfam = {}; // subfam -> {2025R:{},2026B:{},2026R:{}}
+  const matchedSubfams = new Set();
+  let nRows = 0;
+  D.rows.forEach(r=>{
+    if(!rowMatches(r)) return;
+    nRows++;
+    const [si,bi,ci,pi,sfi,vol,ns,gm] = r;
+    const s = D.scenarios[si];
+    totals[s].vol += vol; totals[s].ns += ns; totals[s].gm += gm;
+    const sf = D.subfams[sfi];
+    matchedSubfams.add(sf);
+    if(!bySubfam[sf]) bySubfam[sf] = {'2025R':{vol:0,ns:0,gm:0},'2026B':{vol:0,ns:0,gm:0},'2026R':{vol:0,ns:0,gm:0}};
+    bySubfam[sf][s].vol += vol; bySubfam[sf][s].ns += ns; bySubfam[sf][s].gm += gm;
+  });
+
+  document.getElementById('matchCount').innerHTML = '<b>'+nRows+'</b> filas de la base de datos coinciden con el filtro actual · <b>'+matchedSubfams.size+'</b> sub-families.';
+
+  // KPI tiles: Volumen, Net Sales, Gross Margin, GM%
+  const el = document.getElementById('explKpis');
+  el.innerHTML = '';
+  const gmPct = s => Math.abs(totals[s].ns)>=NS_EPS ? totals[s].gm/totals[s].ns*100 : null;
+  const tiles = [
+    {label:'Volumen', R:totals['2026R'].vol, B:totals['2026B'].vol, LY:totals['2025R'].vol},
+    {label:'Net Sales', R:totals['2026R'].ns, B:totals['2026B'].ns, LY:totals['2025R'].ns},
+    {label:'Gross Margin', R:totals['2026R'].gm, B:totals['2026B'].gm, LY:totals['2025R'].gm},
+    {label:'Gross Margin %', R:gmPct('2026R'), B:gmPct('2026B'), LY:gmPct('2025R'), isPct:true},
+  ];
+  const subOrNull = (a,b)=> (a===null||b===null) ? null : a-b;
+  tiles.forEach(t=>{
+    const d = document.createElement('div');
+    d.className='kpi';
+    const vsLY = subOrNull(t.R, t.LY), vsB = subOrNull(t.R, t.B);
+    const dLine=(lbl,delta,base)=>{
+      if(delta===null) return '<span class="d-flat">'+lbl+': n/d</span>';
+      const pct = (!t.isPct && base!==null && Math.abs(base)>=NS_EPS) ? delta/Math.abs(base)*100 : null;
+      const cls = delta>0.0001?'d-up':(delta<-0.0001?'d-down':'d-flat');
+      const arrow = delta>0.0001?'▲':(delta<-0.0001?'▼':'—');
+      const pctTxt = pct!==null ? ' ('+fmtPctSigned(pct)+'%)' : '';
+      return '<span class="'+cls+'">'+arrow+' '+lbl+': '+fmtSigned(delta)+(t.isPct?' pp':'')+pctTxt+'</span>';
+    };
+    const valTxt = t.R===null ? 'n/d' : fmt(t.R)+(t.isPct?'%':'');
+    d.innerHTML = '<div class="lbl">'+t.label+'</div><div class="val">'+valTxt+'</div>'+
+      '<div class="deltas">'+dLine('vs 2025R', vsLY, t.LY)+dLine('vs 2026B', vsB, t.B)+'</div>';
+    el.appendChild(d);
+  });
+
+  // Breakdown table by sub-family, sorted by 2026R Net Sales desc
+  const table = document.getElementById('breakTable');
+  const entries = Object.keys(bySubfam).map(sf=>({sf, d:bySubfam[sf]}));
+  entries.sort((a,b)=> b.d['2026R'].ns - a.d['2026R'].ns);
+  const shown = entries.slice(0, 40);
+  let html = '<thead><tr><th class="rowhead">Sub-Family</th>'+
+    '<th>NS 2026R</th><th>NS 2025R</th><th>NS 2026B</th><th>Δ NS vs LY</th><th>Δ NS vs Budget</th>'+
+    '<th>GM 2026R</th><th>GM% 2026R</th><th>GM% 2025R</th><th>Δ GM% vs LY</th></tr></thead><tbody>';
+  shown.forEach(({sf,d})=>{
+    const gmp = s => Math.abs(d[s].ns)>=NS_EPS ? d[s].gm/d[s].ns*100 : null;
+    const gm26 = gmp('2026R'), gm25 = gmp('2025R');
+    const dNSly = d['2026R'].ns - d['2025R'].ns;
+    const dNSb = d['2026R'].ns - d['2026B'].ns;
+    const dGMply = (gm26===null||gm25===null) ? null : gm26 - gm25;
+    const clsNSly = dNSly>0.0001?'d-up':(dNSly<-0.0001?'d-down':'d-flat');
+    const clsNSb = dNSb>0.0001?'d-up':(dNSb<-0.0001?'d-down':'d-flat');
+    const clsGMp = dGMply===null?'':(dGMply>0.0001?'d-up':(dGMply<-0.0001?'d-down':'d-flat'));
+    const pctCell = v => v===null ? '<span class="nd">n/d</span>' : fmt(v)+'%';
+    const deltaPpCell = v => v===null ? '<span class="nd">n/d</span>' : fmtPctSigned(v)+' pp';
+    html += '<tr><td class="rowhead">'+sf+'</td>'+
+      '<td>'+fmt(d['2026R'].ns)+'</td><td>'+fmt(d['2025R'].ns)+'</td><td>'+fmt(d['2026B'].ns)+'</td>'+
+      '<td class="'+clsNSly+'">'+fmtSigned(dNSly)+'</td><td class="'+clsNSb+'">'+fmtSigned(dNSb)+'</td>'+
+      '<td>'+fmt(d['2026R'].gm)+'</td><td>'+pctCell(gm26)+'</td><td>'+pctCell(gm25)+'</td>'+
+      '<td class="'+clsGMp+'">'+deltaPpCell(dGMply)+'</td></tr>';
+  });
+  html += '</tbody>';
+  table.innerHTML = html;
+  document.getElementById('breakNote').textContent = entries.length > 40 ?
+    ('Mostrando las 40 sub-families con mayor Net Sales 2026R de un total de '+entries.length+' que cumplen el filtro.') :
+    ('Todas las sub-families ('+entries.length+') que cumplen el filtro actual.');
+}
+
+renderAll();
+renderExplorer();
+</script>
+</body>
+</html>
