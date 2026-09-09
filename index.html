@@ -239,8 +239,8 @@ footer b{color:var(--ink-soft)}
           <div class="field" id="f-rdRoi"><label for="rdRoi">R&amp;D ROI <span class="hint">(x)</span></label><input type="number" id="rdRoi" step="0.1"></div>
           <div class="field full" id="f-hascapex"><label>Does the project have CAPEX?</label>
             <div class="seg" role="group" aria-label="Has CAPEX">
-              <button type="button" id="hasCapYes" aria-pressed="true">Yes</button>
-              <button type="button" id="hasCapNo" aria-pressed="false">No</button>
+              <button type="button" id="hasCapYes" aria-pressed="false">Yes</button>
+              <button type="button" id="hasCapNo" aria-pressed="true">No</button>
             </div>
           </div>
           <div class="field full" id="f-capex"><label>CAPEX with Positive ROI</label>
@@ -345,7 +345,7 @@ function refOf(family,bu){ return DATA.ref[family+'||'+bu] || {n:0,med5:0,med10:
 
 const EX = { bu:"Belgium", platform:"Noodles", family:"Noodles",
   ptype:"Extensions", pdetail:"Line Extensions", nsTotal:900, nsInc:0, gmPct:47, gmImpact:0,
-  incNM:0, rdRoi:0, capexPos:true, stratFit:false, hasCapex:true, skus:[900,800,700] };
+  incNM:0, rdRoi:0, capexPos:true, stratFit:false, hasCapex:false, skus:[900,800,700] };
 let S = structuredClone(EX);
 
 function ctxOf(){
@@ -366,7 +366,7 @@ function ctxOf(){
   return {buTier,fl,r,familyGM,gmThreshold,multi,effNS,
     nsInc:S.nsInc||0, gmPct:(S.gmPct||0)/100, gmImpact:S.gmImpact||0,
     incNM:S.incNM||0, rdRoi:S.rdRoi||0, capexPos:!!S.capexPos,
-    stratFit:!!S.stratFit, hasCapex:S.hasCapex!==false,
+    stratFit:!!S.stratFit, hasCapex:S.hasCapex===true,
     med5:r.med5, med10:r.med10,
     silverCap, bronzeCap, silverHurdle, bronzeHurdle};
 }
@@ -704,7 +704,7 @@ function syncInputs(){
   $('gmImpact').value=S.gmImpact; $('incNM').value=S.incNM; $('rdRoi').value=S.rdRoi;
   $('capYes').setAttribute('aria-pressed',S.capexPos); $('capNo').setAttribute('aria-pressed',!S.capexPos);
   $('stratYes').setAttribute('aria-pressed',!!S.stratFit); $('stratNo').setAttribute('aria-pressed',!S.stratFit);
-  $('hasCapYes').setAttribute('aria-pressed',S.hasCapex!==false); $('hasCapNo').setAttribute('aria-pressed',S.hasCapex===false);
+  $('hasCapYes').setAttribute('aria-pressed',S.hasCapex===true); $('hasCapNo').setAttribute('aria-pressed',S.hasCapex!==true);
 }
 function num(id){ const v=$(id).value; return v===''?0:parseFloat(v); }
 
@@ -732,7 +732,7 @@ function init(){
   $('exampleBtn').addEventListener('click',()=>{S=structuredClone(EX);fill($('bu'),DATA.buList,S.bu);refreshPlatform();fill($('ptype'),ptypes(),S.ptype);refreshFamily();refreshDetail();renderSkuInputs();syncInputs();render();});
   $('resetValuesBtn').addEventListener('click',()=>{
     ['nsTotal','nsInc','gmPct','gmImpact','incNM'].forEach(id=>S[id]='');
-    S.rdRoi=0; S.capexPos=false; S.stratFit=false; S.hasCapex=true; S.skus=[null];
+    S.rdRoi=0; S.capexPos=false; S.stratFit=false; S.hasCapex=false; S.skus=[null];
     renderSkuInputs(); syncInputs(); render();
     const t=$('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600);
   });
