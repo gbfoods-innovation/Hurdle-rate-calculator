@@ -346,7 +346,7 @@ function refOf(family,bu){ return DATA.ref[family+'||'+bu] || {n:0,med5:0,med10:
 
 const EX = { bu:"Belgium", platform:"Noodles", family:"Noodles",
   ptype:"Extensions", pdetail:"Line Extensions", nsTotal:900, nsInc:0, gmPct:47, gmImpact:0,
-  incNM:0, rdRoi:5, capexPos:true, stratFit:false, hasCapex:true, skus:[900,800,700] };
+  incNM:0, rdRoi:0, capexPos:true, stratFit:false, hasCapex:true, skus:[900,800,700] };
 let S = structuredClone(EX);
 
 function ctxOf(){
@@ -732,8 +732,8 @@ function init(){
   $('addSku').addEventListener('click',()=>{S.skus.push(null);renderSkuInputs();render();});
   $('exampleBtn').addEventListener('click',()=>{S=structuredClone(EX);fill($('bu'),DATA.buList,S.bu);refreshPlatform();fill($('ptype'),ptypes(),S.ptype);refreshFamily();refreshDetail();renderSkuInputs();syncInputs();render();});
   $('resetValuesBtn').addEventListener('click',()=>{
-    ['nsTotal','nsInc','gmPct','gmImpact','incNM','rdRoi'].forEach(id=>S[id]='');
-    S.capexPos=false; S.stratFit=false; S.hasCapex=true; S.skus=[null];
+    ['nsTotal','nsInc','gmPct','gmImpact','incNM'].forEach(id=>S[id]='');
+    S.rdRoi=0; S.capexPos=false; S.stratFit=false; S.hasCapex=true; S.skus=[null];
     renderSkuInputs(); syncInputs(); render();
     const t=$('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600);
   });
